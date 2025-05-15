@@ -29,17 +29,23 @@ setup(
 	license='Apache License, Version 2.0',
 	version=VERSION,
 	packages=find_packages(),
+	entry_points={
+		'console_scripts': [
+			'trece = trece.cli:main',
+		]
+	},
 	install_requires=[
+		'click',
 		'geopandas>=0.12.0',
 		'pandas>=1.5.0',
+		'playwright',
 	],
 	extras_require={'test': ['pytest']},
-	python_requires='>=3.9',
+	python_requires='>=3.10',
 	classifiers=[
 		'Intended Audience :: Developers',
 		'Topic :: Software Development :: Libraries',
 		'Topic :: Utilities',
-		'Programming Language :: Python :: 3.9',
 		'Programming Language :: Python :: 3.10',
 		'Programming Language :: Python :: 3.11',
 		'Programming Language :: Python :: 3.12',
