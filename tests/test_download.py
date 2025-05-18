@@ -56,6 +56,26 @@ async def page_with_table(page: Page):
 
 
 @pytest.mark.asyncio
+async def test_table_curr_page_nr(page, downloader):
+	pagination_ul = """
+		<ul class="pagination floatDer">
+			<li class="page-link active"><a class="page-link colorAzulClaro" href="#" title="1">1</a></li>
+			<li><a id="linkPag_2" class="page-link colorAzulClaro" href="#" title="2">2</a></li>																			
+			<li><a id="linkPag_3" class="page-link colorAzulClaro" href="#" title="3">3</a></li>										
+			<li><a id="linkPag_2" class="page-link colorAzulClaro" href="#" aria-label="Siguiente" title="Siguiente"><span aria-hidden="true">»</span></a></li>
+			<li><a id="linkPag_3" class="page-link colorAzulClaro" href="#" aria-label="Última" title="Última"><span aria-hidden="true">»»</span></a></li>		 
+		</ul>
+	"""
+
+	page = await anext(page) if hasattr(page, '__anext__') else page
+	await page.set_content(pagination_ul)
+
+	curr_page_nr = await downloader._table_curr_page_nr(page)
+
+	assert curr_page_nr == 1
+
+
+@pytest.mark.asyncio
 async def test_query_existing_province(page_with_table, downloader):
 	row = await downloader._query_province_row(page_with_table, 'barcelona')
 	assert row is not None

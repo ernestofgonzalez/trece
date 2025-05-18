@@ -80,6 +80,37 @@ class Downloader:
 		await page.wait_for_selector('th.txtTablasCab:has-text("Nombre")', timeout=30000)
 		logger.info('Table loaded successfully')
 
+	async def _pagination_ul(self, page: Page) -> Optional[Locator]:
+		return await page.query_selector("ul.pagination")
+
+	async def _table_curr_page_nr(self, page: Page) -> Optional[int]:
+		pagination_ul = await self._pagination_ul(page)
+		if not pagination_ul:
+			return None
+		
+		curr_page_li = await pagination_ul.query_selector("li.page-link.active")
+		if not curr_page_li:
+			return None
+		
+		anchor = await curr_page_li.query_selector("a")
+		if not anchor:
+			return None
+		
+		anchor_text = await anchor.text_content()
+		if not anchor_text:
+			return None
+			
+		try:
+			return int(anchor_text.strip())
+		except ValueError:
+			return None
+
+	async def _load_table_prev_page(self, page: Page) -> None:
+		pass
+
+	async def _load_table_next_page(self, page: Page) -> None:
+		pass
+
 	async def _query_province_row(self, page: Page, province: str) -> Optional[Locator]:
 		"""Find the table row for a specific province."""
 		province_name = self.PROVINCES[province]
@@ -150,7 +181,7 @@ class Downloader:
 				await page.goto(self.CARTOCIUDAD_URL, wait_until='load')
 				await self._wait_for_table(page)
 
-				await self._download_province(page, 'huelva')
+				await self._download_province(page, 'a_coruna')
 
 				# for key, name in provinces_to_download.items():
 				# 	await self._download_province(key, name, page)
