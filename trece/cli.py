@@ -1,3 +1,5 @@
+import asyncio
+
 import click
 
 from trece.download import Downloader
@@ -30,7 +32,13 @@ def main(ctx):
 
 
 @main.command()
+@click.option(
+	'-p',
+	'--province',
+	required=False,
+)
 @click.pass_context
-def download(ctx):
+def download(ctx, province):
 	"""Download CartoCiudad data."""
 	downloader = Downloader()
+	asyncio.run(downloader.download(province))

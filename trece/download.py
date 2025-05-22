@@ -194,14 +194,16 @@ class Downloader:
 	async def _download_province(self, page: Page, province_id: str) -> bool:
 		"""Download data for a specific province."""
 		province_name = self._get_province_name(province_id)
-		logger.info(f'Starting download for province: {province_name}...')
+		logger.info(f'Starting download for {province_name}...')
 		download_button = await self._query_province_download_button(page, province_id)
 		
 		async with page.expect_download() as download_info:
 			await download_button.click()
 		download = await download_info.value
 
-		await download.save_as(DOWNLOADS_PATH + download.suggested_filename)
+		download_path = DOWNLOADS_PATH + download.suggested_filename
+		logger.info(f'Saving download for {province_name} at {download_path}...')
+		await download.save_as(download_path)
 
 	async def download(self, province_id: Optional[str] = None) -> None:
 		"""
@@ -234,8 +236,8 @@ class Downloader:
 				await page.goto(self.CARTOCIUDAD_URL, wait_until='load')
 				await self._wait_for_table(page)
 
-				for key, name in provinces_to_download.items():
-					await self._download_province(key, name, page)
+				for key, _ in provinces_to_download.items():
+					await self._download_province(page, province_id)
 					await asyncio.sleep(2)
 
 			finally:
