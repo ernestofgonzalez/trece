@@ -210,16 +210,19 @@ class Downloader:
 		Download CartoCiudad data for specified province or all provinces.
 
 		Args:
-			province_key: Optional specific province to download. If None, downloads all.
+			province_id: Optional specific province to download. If None, downloads all.
 		"""
 		if province_id:
 			logger.info(f'Starting download for specific province: {province_id}')
 		else:
 			logger.info('Starting download for all provinces')
 
-		provinces_to_download = (
-			{province_id: self.PROVINCES[province_id]} if province_id else self.PROVINCES
-		)
+		if province_id:
+			provinces_to_download = (
+				{province_id: self.PROVINCES[province_id]} if province_id else self.PROVINCES
+			)
+		else:
+			provinces_to_download = self.PROVINCES
 
 		async with async_playwright() as p:
 			logger.info('Launching browser...')
@@ -237,7 +240,7 @@ class Downloader:
 				await self._wait_for_table(page)
 
 				for key, _ in provinces_to_download.items():
-					await self._download_province(page, province_id)
+					await self._download_province(page, key)
 					await asyncio.sleep(2)
 
 			finally:
