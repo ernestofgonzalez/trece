@@ -194,7 +194,12 @@ class Downloader:
 		province_name = self._get_province_name(province)
 		logger.info(f'Starting download for province: {province_name}...')
 		download_button = await self._query_province_download_button(page, province)
-		pass
+		
+		async with page.expect_download() as download_info:
+			await download_button.click()
+		download = await download_info.value
+
+		await download.save_as("./data/" + download.suggested_filename)
 
 	async def download(self, province_key: Optional[str] = None) -> None:
 		"""
