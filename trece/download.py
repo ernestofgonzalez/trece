@@ -8,7 +8,7 @@ from playwright.async_api import Locator, Page, async_playwright
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-DOWNLOAD_PATH = "./data/"
+DOWNLOADS_PATH = "./data/"
 
 
 class Downloader:
@@ -76,8 +76,8 @@ class Downloader:
 		self.data_dir = Path(data_dir)
 		self.data_dir.mkdir(exist_ok=True)
 
-	def _get_province_name(self, province: str) -> Optional[str]:
-		return self.PROVINCES.get(province, None)
+	def _get_province_name(self, province_id: str) -> Optional[str]:
+		return self.PROVINCES[province_id]
 
 	async def _wait_for_table(self, page: Page) -> None:
 		"""Wait for table to load"""
@@ -153,9 +153,9 @@ class Downloader:
 		next_page_nr = await self._table_next_page_nr(page)
 		return await self._goto_table_page(page, next_page_nr)
 
-	async def _query_province_row(self, page: Page, province: str) -> Optional[Locator]:
+	async def _query_province_row(self, page: Page, province_id: str) -> Optional[Locator]:
 		"""Find the table row for a specific province."""
-		province_name = self._get_province_name(province)
+		province_name = self._get_province_name(province_id)
 
 		logger.info(f'Searching for province row: {province_name}')
 
@@ -171,52 +171,52 @@ class Downloader:
 		logger.warning(f'No row found for province: {province_name}')
 		return None
 
-	async def _query_province_download_button(self, page: Page, province: str) -> Optional[Locator]:
+	async def _query_province_download_button(self, page: Page, province_id: str) -> Optional[Locator]:
 		"""Find the download button for a specific province."""
-		row = await self._query_province_row(page, province)
+		row = await self._query_province_row(page, province_id)
 		if row is None:
 			next_page_nr = await self._table_next_page_nr(page)
 
 		while row is None and next_page_nr is not None:
 			await self._goto_table_next_page(page)
-			row = await self._query_province_row(page, province)
+			row = await self._query_province_row(page, province_id)
 			next_page_nr = await self._table_next_page_nr(page)
 
 		if not row:
-			logger.error(f'Could not find table row for province: {province}')
+			logger.error(f'Could not find table row for province: {province_id}')
 			return None
 
 		button = await row.query_selector('a[id^="linkDescDir_"]')
 		if button is None:
-			logger.error(f'Download button not found for province: {province}')
+			logger.error(f'Download button not found for province: {province_id}')
 		return button
 
-	async def _download_province(self, page: Page, province: str) -> bool:
+	async def _download_province(self, page: Page, province_id: str) -> bool:
 		"""Download data for a specific province."""
-		province_name = self._get_province_name(province)
+		province_name = self._get_province_name(province_id)
 		logger.info(f'Starting download for province: {province_name}...')
-		download_button = await self._query_province_download_button(page, province)
+		download_button = await self._query_province_download_button(page, province_id)
 		
 		async with page.expect_download() as download_info:
 			await download_button.click()
 		download = await download_info.value
 
-		await download.save_as(DOWNLOAD_PATH + download.suggested_filename)
+		await download.save_as(DOWNLOADS_PATH + download.suggested_filename)
 
-	async def download(self, province_key: Optional[str] = None) -> None:
+	async def download(self, province_id: Optional[str] = None) -> None:
 		"""
 		Download CartoCiudad data for specified province or all provinces.
 
 		Args:
 			province_key: Optional specific province to download. If None, downloads all.
 		"""
-		if province_key:
-			logger.info(f'Starting download for specific province: {province_key}')
+		if province_id:
+			logger.info(f'Starting download for specific province: {province_id}')
 		else:
 			logger.info('Starting download for all provinces')
 
 		provinces_to_download = (
-			{province_key: self.PROVINCES[province_key]} if province_key else self.PROVINCES
+			{province_id: self.PROVINCES[province_id]} if province_id else self.PROVINCES
 		)
 
 		async with async_playwright() as p:
@@ -234,11 +234,9 @@ class Downloader:
 				await page.goto(self.CARTOCIUDAD_URL, wait_until='load')
 				await self._wait_for_table(page)
 
-				await self._download_province(page, 'huelva')
-
-				# for key, name in provinces_to_download.items():
-				# 	await self._download_province(key, name, page)
-				# 	await asyncio.sleep(2)
+				for key, name in provinces_to_download.items():
+					await self._download_province(key, name, page)
+					await asyncio.sleep(2)
 
 			finally:
 				logger.info('Closing browser')
