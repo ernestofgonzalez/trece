@@ -108,6 +108,20 @@ class Downloader:
 			logger.error('Active page link text is not an integer: %s', anchor_text)
 			return None
 		
+	async def _table_next_page_nr(self, page: Page) -> Optional[int]:
+		curr_page_nr = await self._table_curr_page_nr(page)
+		next_page_nr = curr_page_nr + 1
+
+		pagination_ul = await self._query_table_pagination_ul(page)
+		if not pagination_ul:
+			return None
+		
+		anchor = await pagination_ul.query_selector(f'a.page-link[title="{next_page_nr}"]')
+		if not anchor:
+			return None
+
+		return next_page_nr
+		
 	async def _goto_table_page(self, page: Page, table_page_nr: int) -> None:
 		pagination_ul = await self._query_table_pagination_ul(page)
 		if not pagination_ul:
@@ -125,6 +139,7 @@ class Downloader:
 		await page.wait_for_selector('div:text("Procesando solicitud. Espera por favor...")', state='hidden')
 
 		logger.info('table page loaded successfully')
+		return table_page_nr
 
 	async def _goto_table_prev_page(self, page: Page) -> None:
 		curr_page_nr = await self._table_curr_page_nr(page)
@@ -133,8 +148,7 @@ class Downloader:
 
 	async def _goto_table_next_page(self, page: Page) -> None:
 		logger.info(f'Loading next table page...')
-		curr_page_nr = await self._table_curr_page_nr(page)
-		next_page_nr = curr_page_nr + 1
+		next_page_nr = await self._table_next_page_nr(page)
 		return await self._goto_table_page(page, next_page_nr)
 
 	async def _query_province_row(self, page: Page, province: str) -> Optional[Locator]:
@@ -158,6 +172,14 @@ class Downloader:
 	async def _query_province_download_button(self, page: Page, province: str) -> Optional[Locator]:
 		"""Find the download button for a specific province."""
 		row = await self._query_province_row(page, province)
+		if row is None:
+			next_page_nr = await self._table_next_page_nr(page)
+
+		while row is None and next_page_nr is not None:
+			await self._goto_table_next_page(page)
+			row = await self._query_province_row(page, province)
+			next_page_nr = await self._table_next_page_nr(page)
+
 		if not row:
 			logger.error(f'Could not find table row for province: {province}')
 			return None
@@ -205,8 +227,7 @@ class Downloader:
 				await page.goto(self.CARTOCIUDAD_URL, wait_until='load')
 				await self._wait_for_table(page)
 
-				await self._download_province(page, 'a_coruna')
-				await self._goto_table_next_page(page)
+				await self._download_province(page, 'huelva')
 
 				# for key, name in provinces_to_download.items():
 				# 	await self._download_province(key, name, page)
