@@ -8,6 +8,8 @@ from playwright.async_api import Locator, Page, async_playwright
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+DOWNLOAD_PATH = "./data/"
+
 
 class Downloader:
 	"""Downloads CartoCiudad data for Spanish provinces."""
@@ -199,7 +201,7 @@ class Downloader:
 			await download_button.click()
 		download = await download_info.value
 
-		await download.save_as("./data/" + download.suggested_filename)
+		await download.save_as(DOWNLOAD_PATH + download.suggested_filename)
 
 	async def download(self, province_key: Optional[str] = None) -> None:
 		"""
