@@ -74,46 +74,72 @@ class Downloader:
 		self.data_dir = Path(data_dir)
 		self.data_dir.mkdir(exist_ok=True)
 
+	def _get_province_name(self, province: str) -> Optional[str]:
+		return self.PROVINCES.get(province, None)
+
 	async def _wait_for_table(self, page: Page) -> None:
 		"""Wait for table to load"""
 		logger.info('Waiting for table to load...')
 		await page.wait_for_selector('th.txtTablasCab:has-text("Nombre")', timeout=30000)
 		logger.info('Table loaded successfully')
 
-	async def _pagination_ul(self, page: Page) -> Optional[Locator]:
+	async def _query_table_pagination_ul(self, page: Page) -> Optional[Locator]:
 		return await page.query_selector("ul.pagination")
 
 	async def _table_curr_page_nr(self, page: Page) -> Optional[int]:
-		pagination_ul = await self._pagination_ul(page)
+		pagination_ul = await self._query_table_pagination_ul(page)
 		if not pagination_ul:
+			logger.error('Failed to find table pagination list. Cannot change page.')
 			return None
 		
-		curr_page_li = await pagination_ul.query_selector("li.page-link.active")
-		if not curr_page_li:
-			return None
-		
-		anchor = await curr_page_li.query_selector("a")
+		anchor = await pagination_ul.query_selector("li.page-link.active a")
 		if not anchor:
+			logger.error('Failed to find active page link in pagination list. Cannot determine current page.')
 			return None
 		
 		anchor_text = await anchor.text_content()
 		if not anchor_text:
+			logger.error('Active page link found but has no text. Cannot determine current page number.')
 			return None
 			
 		try:
 			return int(anchor_text.strip())
 		except ValueError:
+			logger.error('Active page link text is not an integer: %s', anchor_text)
+			return None
+		
+	async def _goto_table_page(self, page: Page, table_page_nr: int) -> None:
+		pagination_ul = await self._query_table_pagination_ul(page)
+		if not pagination_ul:
+			logger.error('Failed to find table pagination list. Cannot go to page %s', table_page_nr)
+			return None
+		
+		anchor = await pagination_ul.query_selector(f'a.page-link[title="{table_page_nr}"]')
+		if not anchor:
+			logger.error('Failed to find anchor for table page %s in pagination list. Cannot go to page.', table_page_nr)
 			return None
 
-	async def _load_table_prev_page(self, page: Page) -> None:
-		pass
+		await anchor.click()
+		
+		await page.wait_for_selector('div:text("Procesando solicitud. Espera por favor...")')
+		await page.wait_for_selector('div:text("Procesando solicitud. Espera por favor...")', state='hidden')
 
-	async def _load_table_next_page(self, page: Page) -> None:
-		pass
+		logger.info('table page loaded successfully')
+
+	async def _goto_table_prev_page(self, page: Page) -> None:
+		curr_page_nr = await self._table_curr_page_nr(page)
+		prev_page_nr = curr_page_nr - 1
+		return await self._goto_table_page(page, prev_page_nr)
+
+	async def _goto_table_next_page(self, page: Page) -> None:
+		logger.info(f'Loading next table page...')
+		curr_page_nr = await self._table_curr_page_nr(page)
+		next_page_nr = curr_page_nr + 1
+		return await self._goto_table_page(page, next_page_nr)
 
 	async def _query_province_row(self, page: Page, province: str) -> Optional[Locator]:
 		"""Find the table row for a specific province."""
-		province_name = self.PROVINCES[province]
+		province_name = self._get_province_name(province)
 
 		logger.info(f'Searching for province row: {province_name}')
 
@@ -131,22 +157,20 @@ class Downloader:
 
 	async def _query_province_download_button(self, page: Page, province: str) -> Optional[Locator]:
 		"""Find the download button for a specific province."""
-		logger.info(f'Looking for download button for province: {province}')
 		row = await self._query_province_row(page, province)
 		if not row:
-			logger.warning(f'Could not find download button for province: {province}')
+			logger.error(f'Could not find table row for province: {province}')
 			return None
 
 		button = await row.query_selector('a[id^="linkDescDir_"]')
-		if button:
-			logger.info(f'Found download button for province: {province}')
-		else:
-			logger.warning(f'Download button not found for province: {province}')
+		if button is None:
+			logger.error(f'Download button not found for province: {province}')
 		return button
 
 	async def _download_province(self, page: Page, province: str) -> bool:
 		"""Download data for a specific province."""
-		logger.info(f'Starting download for province: {province}')
+		province_name = self._get_province_name(province)
+		logger.info(f'Starting download for province: {province_name}...')
 		download_button = await self._query_province_download_button(page, province)
 		pass
 
@@ -182,6 +206,7 @@ class Downloader:
 				await self._wait_for_table(page)
 
 				await self._download_province(page, 'a_coruna')
+				await self._goto_table_next_page(page)
 
 				# for key, name in provinces_to_download.items():
 				# 	await self._download_province(key, name, page)
