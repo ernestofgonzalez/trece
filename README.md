@@ -85,6 +85,8 @@ or for a single province
 trece download --province Madrid
 ```
 
+The downloaded file will be saved as a ZIP archive in the `data/` folder (e.g., `data/CARTOCIUDAD_CALLEJERO_MADRID.zip`). 
+
 
 ## Command Line Reference
 
