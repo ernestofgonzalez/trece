@@ -15,7 +15,7 @@ def get_long_description():
 
 setup(
 	name='trece',
-	description='',
+	description='A CLI tool for downloading authoritative Spanish geospatial and address data.',
 	long_description=get_long_description(),
 	long_description_content_type='text/markdown',
 	author='Ernesto González',
