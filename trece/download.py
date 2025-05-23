@@ -239,7 +239,7 @@ class Downloader:
 
 		async with async_playwright() as p:
 			logger.info('Launching browser...')
-			browser = await p.chromium.launch(headless=False)
+			browser = await p.chromium.launch(headless=True)
 			context = await browser.new_context(
 				accept_downloads=True, viewport={'width': 1280, 'height': 800}
 			)
