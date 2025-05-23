@@ -5,14 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/ernestofgonzalez/trece/blob/main/LICENSE)
 
 
-A CLI tool for downloading and managing [CartoCiudad](https://www.cartociudad.es/) data.
-
-CartoCiudad is a comprehensive geospatial database maintained by the [Instituto Geográfico Nacional](https://www.ign.es/). It provides authoritative, up-to-date geographic information for all Spanish provinces, including
-
-- Administrative boundaries (provinces, municipalities, districts, etc.)
-- Road networks and street maps
-- Postal codes and census sections
-- Points of interest and urban features
+**Trece** is a CLI tool for downloading and managing authoritative Spanish geospatial and address data, including administrative boundaries, road networks, postal codes, and address points for all Spanish provinces. The data is sourced from [CartoCiudad](https://www.cartociudad.es/), an official national geospatial database maintained by the [Instituto Geográfico Nacional](https://www.ign.es/). Refer to [Data Source and Attribution](#data-source-and-attribution) for more.
 
 CartoCiudad data is widely used for mapping, spatial analysis, urban planning, and research. The data is open, regularly updated, and available in various formats suitable for GIS and data science workflows.
 
