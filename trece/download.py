@@ -74,7 +74,7 @@ class Downloader:
 
 	def __init__(self, data_dir: Union[str, Path] = './data'):
 		self.data_dir = Path(data_dir)
-		self.data_dir.mkdir(exist_ok=True)
+		self.data_dir.mkdir(parents=True, exist_ok=True)
 
 	def _get_province_name(self, province_id: str) -> Optional[str]:
 		return self.PROVINCES[province_id]
@@ -201,9 +201,9 @@ class Downloader:
 			await download_button.click()
 		download = await download_info.value
 
-		download_path = DOWNLOADS_PATH + download.suggested_filename
+		download_path = self.data_dir / download.suggested_filename
 		logger.info(f'Saving download for {province_name} at {download_path}...')
-		await download.save_as(download_path)
+		await download.save_as(str(download_path))
 
 	async def download(self, province_id: Optional[str] = None) -> None:
 		"""

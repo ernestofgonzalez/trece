@@ -82,10 +82,10 @@ trece download
 or for a single province
 
 ```bash
-trece download --province Madrid
+trece download --province madrid
 ```
 
-The downloaded file will be saved as a ZIP archive in the `data/` folder (e.g., `data/CARTOCIUDAD_CALLEJERO_MADRID.zip`). 
+This will download a ZIP archive for the Madrid province at `./data/CARTOCIUDAD_CALLEJERO_MADRID.zip` by default, but you can specify an output directory with the `-o` option. See the [Options](#options) section for more.
 
 
 ## Command Line Reference
@@ -103,6 +103,7 @@ trece [OPTIONS] COMMAND [ARGS]...
 - `-v, --version` — Print trece version
 - `-h, --help` — Show help message and exit
 - `-p, --province` — (For `download`) Specify a Spanish province (optional)
+- `-o, --output` — (For `download`) Output directory for downloaded files (optional)
 
 
 ## Development

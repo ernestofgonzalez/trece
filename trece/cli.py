@@ -37,8 +37,15 @@ def main(ctx):
 	'--province',
 	required=False,
 )
+@click.option(
+	'-o',
+	'--output',
+	required=False,
+	type=click.Path(file_okay=False, dir_okay=True, writable=True, resolve_path=True),
+	help='Output directory for downloaded files.'
+)
 @click.pass_context
-def download(ctx, province):
+def download(ctx, province, output):
 	"""Download CartoCiudad data."""
-	downloader = Downloader()
+	downloader = Downloader(data_dir=output) if output else Downloader()
 	asyncio.run(downloader.download(province))
