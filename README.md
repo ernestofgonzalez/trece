@@ -5,7 +5,16 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](https://github.com/ernestofgonzalez/trece/blob/main/LICENSE)
 
 
-A CLI tool for downloading and managing [CartoCiudad](https://centrodedescargas.cnig.es/CentroDescargas/cartociudad) data for all Spanish provinces.
+A CLI tool for downloading and managing [CartoCiudad](https://www.cartociudad.es/) data.
+
+CartoCiudad is a comprehensive geospatial database maintained by the [Instituto Geográfico Nacional](https://www.ign.es/). It provides authoritative, up-to-date geographic information for all Spanish provinces, including:
+
+- Administrative boundaries (provinces, municipalities, districts, etc.)
+- Road networks and street maps
+- Postal codes and census sections
+- Points of interest and urban features
+
+CartoCiudad data is widely used for mapping, spatial analysis, urban planning, and research. The data is open, regularly updated, and available in various formats suitable for GIS and data science workflows.
 
 
 ## Features
@@ -18,6 +27,8 @@ A CLI tool for downloading and managing [CartoCiudad](https://centrodedescargas.
 ## Getting Started
 
 ### Installation
+
+Install via [PyPI](https://pypi.org/)
 
 ```bash
 pip install trece
