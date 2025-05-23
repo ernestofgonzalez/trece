@@ -8,7 +8,7 @@ from playwright.async_api import Locator, Page, async_playwright
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
-DOWNLOADS_PATH = "./data/"
+DOWNLOADS_PATH = './data/'
 
 
 class Downloader:
@@ -86,30 +86,34 @@ class Downloader:
 		logger.info('Table loaded successfully')
 
 	async def _query_table_pagination_ul(self, page: Page) -> Optional[Locator]:
-		return await page.query_selector("ul.pagination")
+		return await page.query_selector('ul.pagination')
 
 	async def _table_curr_page_nr(self, page: Page) -> Optional[int]:
 		pagination_ul = await self._query_table_pagination_ul(page)
 		if not pagination_ul:
 			logger.error('Failed to find table pagination list. Cannot change page.')
 			return None
-		
-		anchor = await pagination_ul.query_selector("li.page-link.active a")
+
+		anchor = await pagination_ul.query_selector('li.page-link.active a')
 		if not anchor:
-			logger.error('Failed to find active page link in pagination list. Cannot determine current page.')
+			logger.error(
+				'Failed to find active page link in pagination list. Cannot determine current page.'
+			)
 			return None
-		
+
 		anchor_text = await anchor.text_content()
 		if not anchor_text:
-			logger.error('Active page link found but has no text. Cannot determine current page number.')
+			logger.error(
+				'Active page link found but has no text. Cannot determine current page number.'
+			)
 			return None
-			
+
 		try:
 			return int(anchor_text.strip())
 		except ValueError:
 			logger.error('Active page link text is not an integer: %s', anchor_text)
 			return None
-		
+
 	async def _table_next_page_nr(self, page: Page) -> Optional[int]:
 		curr_page_nr = await self._table_curr_page_nr(page)
 		next_page_nr = curr_page_nr + 1
@@ -117,28 +121,35 @@ class Downloader:
 		pagination_ul = await self._query_table_pagination_ul(page)
 		if not pagination_ul:
 			return None
-		
+
 		anchor = await pagination_ul.query_selector(f'a.page-link[title="{next_page_nr}"]')
 		if not anchor:
 			return None
 
 		return next_page_nr
-		
+
 	async def _goto_table_page(self, page: Page, table_page_nr: int) -> None:
 		pagination_ul = await self._query_table_pagination_ul(page)
 		if not pagination_ul:
-			logger.error('Failed to find table pagination list. Cannot go to page %s', table_page_nr)
+			logger.error(
+				'Failed to find table pagination list. Cannot go to page %s', table_page_nr
+			)
 			return None
-		
+
 		anchor = await pagination_ul.query_selector(f'a.page-link[title="{table_page_nr}"]')
 		if not anchor:
-			logger.error('Failed to find anchor for table page %s in pagination list. Cannot go to page.', table_page_nr)
+			logger.error(
+				'Failed to find anchor for table page %s in pagination list. Cannot go to page.',
+				table_page_nr,
+			)
 			return None
 
 		await anchor.click()
-		
+
 		await page.wait_for_selector('div:text("Procesando solicitud. Espera por favor...")')
-		await page.wait_for_selector('div:text("Procesando solicitud. Espera por favor...")', state='hidden')
+		await page.wait_for_selector(
+			'div:text("Procesando solicitud. Espera por favor...")', state='hidden'
+		)
 
 		logger.info('table page loaded successfully')
 		return table_page_nr
@@ -171,7 +182,9 @@ class Downloader:
 		logger.warning(f'No row found for province: {province_name}')
 		return None
 
-	async def _query_province_download_button(self, page: Page, province_id: str) -> Optional[Locator]:
+	async def _query_province_download_button(
+		self, page: Page, province_id: str
+	) -> Optional[Locator]:
 		"""Find the download button for a specific province."""
 		row = await self._query_province_row(page, province_id)
 		if row is None:
@@ -196,7 +209,7 @@ class Downloader:
 		province_name = self._get_province_name(province_id)
 		logger.info(f'Starting download for {province_name}...')
 		download_button = await self._query_province_download_button(page, province_id)
-		
+
 		async with page.expect_download() as download_info:
 			await download_button.click()
 		download = await download_info.value

@@ -42,7 +42,7 @@ def main(ctx):
 	'--output',
 	required=False,
 	type=click.Path(file_okay=False, dir_okay=True, writable=True, resolve_path=True),
-	help='Output directory for downloaded files.'
+	help='Output directory for downloaded files.',
 )
 @click.pass_context
 def download(ctx, province, output):
